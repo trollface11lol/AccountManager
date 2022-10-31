@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+message AddAccountRequest {
+    string username = 1;
+    string password = 2;
+    string new_password = 3; // Новый пароль аккаунта
+    bool renew = 4; // Принудительно обновить токен аккаунта, если он уже в базе
+    bool use_proxy = 5; // Использовать ли прокси
+    bool compare_passwords = 6; // Првоерять совпадение паролей уже добавленного аккаунта
+}
+
+message AddAccountResponse {
+    int64 vk_id = 1;
+}
+
+message VkApiCallRequest {
+    int64 vk_id = 1;
+    string method = 2;
+    map<string, string> params = 3;
+}
+
+message VkApiCallResponse {
+    bytes result = 1;
+}
+
+message GetAccountsRequest {}
+message GetAccountsResponse {
+    repeated int64 acc_ids = 1;
+    int64 count = 2;
+}
+
+message ConnectAudioQueueRequest {
+    int64 vk_id = 1;
+}
+
+message AudioQueuePollResult {
+    oneof result {
+        //google.rpc.Status error = 1; // Инфомрация об ошибке
+        AudioQueueServerResponse response = 2; // Ответ сервера ВК
+    }
+}
+
+message AudioQueueServerResponse {
+    repeated AudioQueueEvent events = 1; // Список событий
+}
+
+message AudioQueueEvent {
+    bytes data = 1; // байты JSON события
+}
+
+message ConnectAudioQueueResponse {
+    AudioQueuePollResult data = 1;
+}
+
+message GetAccountsSessionsRequest {
+    repeated int64 vk_ids = 1; // Список идентификаторов аккаунтов
+}
+
+message GetAccountsSessionsResponseSession {
+    int64 vk_id = 1;
+    string device_id = 2;
+    string user_agent = 3;
+    string api_v = 4;
+    string language = 5;
+}
+
+message GetAccountsSessionsResponse {
+    repeated GetAccountsSessionsResponseSession items = 1;
+}
+
+message CheckAccountsRequest {
+    repeated int64 vk_ids = 1;
+}
+
+message CheckAccountsResponse {
+    int32 valid = 1; // Количество рабочих аккаунтов
+    int32 invalid = 2; // Количество нерабочих аккаунтов
+    int32 checked = 3; // Количество проверенных аккаунтов
+    int32 total = 4; // Общее количество аккаунтов
+}
+
+service AccountsManager {
+    rpc AddAccount(AddAccountRequest) returns (AddAccountResponse);
+    rpc VkApiCall(VkApiCallRequest) returns (VkApiCallResponse);
+    rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse);
+    rpc ConnectAudioQueue(ConnectAudioQueueRequest) returns (stream ConnectAudioQueueResponse);
+    rpc GetAccountsSessions(GetAccountsSessionsRequest) returns (GetAccountsSessionsResponse);
+    rpc CheckAccounts(CheckAccountsRequest) returns (stream CheckAccountsResponse);
+}
